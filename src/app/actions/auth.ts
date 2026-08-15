@@ -16,7 +16,8 @@ export async function authenticate(
   formData: FormData,
 ) {
   try {
-    await signIn('credentials', Object.fromEntries(formData))
+    const data = Object.fromEntries(formData)
+    await signIn('credentials', { ...data, redirectTo: '/dashboard' })
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
@@ -75,7 +76,7 @@ export async function register(
     })
     
     // Attempt sign-in right after registration
-    await signIn('credentials', { email, password })
+    await signIn('credentials', { email, password, redirectTo: '/dashboard' })
   } catch (error) {
     if (error instanceof AuthError) {
       return 'Registration succeeded but login failed.'
@@ -86,5 +87,5 @@ export async function register(
 }
 
 export async function logout() {
-  await signOut()
+  await signOut({ redirectTo: '/' })
 }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Activity, Camera, LineChart } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function Home() {
   return (
@@ -17,9 +18,9 @@ export default function Home() {
           <Link href="/login" className="text-sm font-medium text-zinc-600 hover:text-teal-600 dark:text-zinc-400 dark:hover:text-teal-400 transition-colors hidden sm:block">
             Log in
           </Link>
-          <Button asChild className="rounded-full px-6 bg-teal-600 hover:bg-teal-700 text-white border-0">
-            <Link href="/register">Get Started</Link>
-          </Button>
+          <Link href="/register" className={cn(buttonVariants({ variant: "default" }), "rounded-full px-6 bg-teal-600 hover:bg-teal-700 text-white border-0")}>
+            Get Started
+          </Link>
         </nav>
       </header>
 
@@ -48,14 +49,12 @@ export default function Home() {
           </p>
           
           <div className="flex flex-col sm:flex-row items-center gap-4 pt-6 w-full sm:w-auto">
-            <Button asChild size="lg" className="w-full sm:w-auto rounded-full px-8 h-14 text-base font-medium shadow-md shadow-teal-500/20 bg-teal-600 hover:bg-teal-700 text-white border-0 transition-transform hover:scale-105">
-              <Link href="/register">
-                Start Tracking Free <ArrowRight className="ml-2 w-5 h-5" />
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto rounded-full px-8 h-14 text-base font-medium border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
-              <Link href="/about">How it works</Link>
-            </Button>
+            <Link href="/register" className={cn(buttonVariants({ variant: "default", size: "lg" }), "w-full sm:w-auto rounded-full px-8 h-14 text-base font-medium shadow-md shadow-teal-500/20 bg-teal-600 hover:bg-teal-700 text-white border-0 transition-transform hover:scale-105")}>
+              Start Tracking Free <ArrowRight className="ml-2 w-5 h-5" />
+            </Link>
+            <Link href="/about" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full sm:w-auto rounded-full px-8 h-14 text-base font-medium border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors")}>
+              How it works
+            </Link>
           </div>
         </section>
 

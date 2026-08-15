@@ -17,10 +17,8 @@ export const genAI = new GoogleGenerativeAI(apiKey || "");
  */
 export async function analyzeFoodWithGemini(prompt: string, base64Image?: string) {
   try {
-    // For fast and multimodal tasks, Gemini 1.5 Flash is recommended
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-    const parts: any[] = [prompt];
+    const parts: unknown[] = [prompt];
 
     if (base64Image) {
       // Assuming base64 string doesn't include the data:image/jpeg;base64, prefix
@@ -36,7 +34,7 @@ export async function analyzeFoodWithGemini(prompt: string, base64Image?: string
     const result = await model.generateContent(parts);
     const response = await result.response;
     return response.text();
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error calling Gemini API:", error);
     throw error;
   }
