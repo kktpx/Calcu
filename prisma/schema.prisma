@@ -1,0 +1,90 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  passwordHash  String
+  createdAt     DateTime       @default(now())
+  profile       UserProfile?
+  meals         Meal[]
+  weightRecords WeightRecord[]
+  dailySummaries DailySummary[]
+}
+
+model UserProfile {
+  id                   String @id @default(uuid())
+  userId               String @unique
+  age                  Int
+  gender               String
+  heightCm             Float
+  weightKg             Float
+  activityLevel        String
+  fitnessGoal          String
+  dailyCalorieTarget   Int
+  targetProtein        Int
+  targetCarbs          Int
+  targetFat            Int
+  user                 User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Food {
+  id           String     @id @default(uuid())
+  name         String
+  calories     Int
+  protein      Float
+  carbs        Float
+  fat          Float
+  fiber        Float
+  servingSize  String
+  mealItems    MealItem[]
+}
+
+model Meal {
+  id        String     @id @default(uuid())
+  userId    String
+  logDate   DateTime
+  mealType  String     // "Breakfast, Lunch, Dinner, Snack"
+  createdAt DateTime   @default(now())
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mealItems MealItem[]
+}
+
+model MealItem {
+  id                 String @id @default(uuid())
+  mealId             String
+  foodId             String
+  servingMultiplier  Float
+  computedCalories   Int
+  meal               Meal   @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  food               Food   @relation(fields: [foodId], references: [id], onDelete: Restrict)
+}
+
+model WeightRecord {
+  id         String   @id @default(uuid())
+  userId     String
+  weightKg   Float
+  recordDate DateTime
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model DailySummary {
+  id            String   @id @default(uuid())
+  userId        String
+  summaryDate   DateTime
+  totalCalories Int
+  totalProtein  Float
+  totalCarbs    Float
+  totalFat      Float
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
