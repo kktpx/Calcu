@@ -1,0 +1,63 @@
+'use client'
+
+import { useState } from 'react'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
+
+type ChartData = {
+  date: string
+  calories: number
+  protein: number
+  carbs: number
+  fat: number
+}
+
+export function DashboardCharts({ data }: { data: ChartData[] }) {
+  const [activeChart, setActiveChart] = useState<'calories' | 'macros'>('calories')
+
+  return (
+    <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-100 dark:border-zinc-800">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold">Weekly Overview</h2>
+        <div className="flex bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1">
+          <button 
+            onClick={() => setActiveChart('calories')}
+            className={`px-3 py-1 text-sm rounded-md transition-colors ${activeChart === 'calories' ? 'bg-white dark:bg-zinc-700 shadow-sm font-medium' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300'}`}
+          >
+            Calories
+          </button>
+          <button 
+            onClick={() => setActiveChart('macros')}
+            className={`px-3 py-1 text-sm rounded-md transition-colors ${activeChart === 'macros' ? 'bg-white dark:bg-zinc-700 shadow-sm font-medium' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300'}`}
+          >
+            Macros
+          </button>
+        </div>
+      </div>
+
+      <div className="h-64 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          {activeChart === 'calories' ? (
+            <BarChart data={data} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e4e7" strokeOpacity={0.5} />
+              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#71717a' }} dy={10} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#71717a' }} />
+              <Tooltip cursor={{ fill: 'rgba(0,0,0,0.05)' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+              <Bar dataKey="calories" name="Calories (kcal)" fill="#0d9488" radius={[4, 4, 0, 0]} maxBarSize={40} />
+            </BarChart>
+          ) : (
+            <BarChart data={data} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e4e7" strokeOpacity={0.5} />
+              <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#71717a' }} dy={10} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#71717a' }} />
+              <Tooltip cursor={{ fill: 'rgba(0,0,0,0.05)' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+              <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="circle" />
+              <Bar dataKey="carbs" name="Carbs (g)" stackId="a" fill="#f59e0b" maxBarSize={40} />
+              <Bar dataKey="protein" name="Protein (g)" stackId="a" fill="#f43f5e" maxBarSize={40} />
+              <Bar dataKey="fat" name="Fat (g)" stackId="a" fill="#0ea5e9" radius={[4, 4, 0, 0]} maxBarSize={40} />
+            </BarChart>
+          )}
+        </ResponsiveContainer>
+      </div>
+    </div>
+  )
+}
