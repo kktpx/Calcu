@@ -1,167 +1,168 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { createFood } from '@/app/actions/food'
-import { analyzeFoodImage } from '@/app/actions/ai-food'
 import { Button } from '@/components/ui/button'
-import { Camera, Loader2, Image as ImageIcon } from 'lucide-react'
+import { createFood, analyzeFoodImage } from '@/app/actions/food'
+import { Plus, Camera, Loader2 } from 'lucide-react'
+import { useLanguage } from './language-provider'
 
 export function FoodForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [previewImage, setPreviewImage] = useState<string | null>(null)
-  
+  const [isScanning, setIsScanning] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  
-  const nameRef = useRef<HTMLInputElement>(null)
-  const servingRef = useRef<HTMLInputElement>(null)
-  const calRef = useRef<HTMLInputElement>(null)
-  const proteinRef = useRef<HTMLInputElement>(null)
-  const carbsRef = useRef<HTMLInputElement>(null)
-  const fatRef = useRef<HTMLInputElement>(null)
-  const fiberRef = useRef<HTMLInputElement>(null)
+  const { t } = useLanguage()
 
-  async function action(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
     setIsSubmitting(true)
+    const formData = new FormData(e.currentTarget)
+    if (!formData.get('fiber')) {
+      formData.append('fiber', '0')
+    }
     try {
       await createFood(formData)
-      formRef.current?.reset()
-      setPreviewImage(null)
-      if (fileInputRef.current) fileInputRef.current.value = ''
-    } catch (error) {
-      console.error(error)
+      e.currentTarget.reset()
+    } catch (err) {
+      console.error(err)
       alert('Failed to add food')
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Show preview
-    const objectUrl = URL.createObjectURL(file)
-    setPreviewImage(objectUrl)
-
-    setIsAnalyzing(true)
+    setIsScanning(true)
     try {
       const formData = new FormData()
-      formData.append('image', file)
-
+      formData.append('file', file)
+      
       const result = await analyzeFoodImage(formData)
       
-      if (result.success && result.data) {
-        const { name, servingSize, calories, protein, carbs, fat, fiber } = result.data
-        
-        // Auto-fill the form
-        if (nameRef.current) nameRef.current.value = name || ''
-        if (servingRef.current) servingRef.current.value = servingSize || ''
-        if (calRef.current) calRef.current.value = calories || 0
-        if (proteinRef.current) proteinRef.current.value = protein || 0
-        if (carbsRef.current) carbsRef.current.value = carbs || 0
-        if (fatRef.current) fatRef.current.value = fat || 0
-        if (fiberRef.current) fiberRef.current.value = fiber || 0
-      } else {
-        alert(result.error || 'Failed to analyze image')
+      // Populate form
+      if (formRef.current) {
+        const form = formRef.current
+        ;(form.elements.namedItem('name') as HTMLInputElement).value = result.name || ''
+        ;(form.elements.namedItem('servingSize') as HTMLInputElement).value = result.servingSize || ''
+        ;(form.elements.namedItem('calories') as HTMLInputElement).value = result.calories || ''
+        ;(form.elements.namedItem('protein') as HTMLInputElement).value = result.protein || ''
+        ;(form.elements.namedItem('carbs') as HTMLInputElement).value = result.carbs || ''
+        ;(form.elements.namedItem('fat') as HTMLInputElement).value = result.fat || ''
       }
     } catch (error) {
-      console.error('Image analysis error:', error)
-      alert('Error analyzing image. Make sure your Gemini API key is set in .env')
+      console.error(error)
+      alert('Failed to analyze food image')
     } finally {
-      setIsAnalyzing(false)
+      setIsScanning(false)
+      // Reset file input so same file can be selected again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
     }
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-100 dark:border-zinc-800 p-6 shadow-sm">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <Camera className="w-5 h-5 text-teal-500" />
-          AI Food Recognition
-        </h3>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">
-          ถ่ายรูปหรืออัปโหลดรูปอาหารเพื่อให้ AI ช่วยวิเคราะห์และกรอกข้อมูลโภชนาการให้โดยอัตโนมัติ
-        </p>
-        
-        <input 
-          type="file" 
-          accept="image/*" 
-          capture="environment"
-          ref={fileInputRef}
-          className="hidden"
-          onChange={handleImageUpload}
-        />
-        
-        <div className="flex flex-col sm:flex-row gap-4 items-center">
-          <Button 
-            type="button" 
-            variant="outline" 
-            className="w-full sm:w-auto flex-1 h-12"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isAnalyzing}
-          >
-            {isAnalyzing ? (
-              <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> กำลังวิเคราะห์รูปภาพ...</>
-            ) : (
-              <><ImageIcon className="w-4 h-4 mr-2" /> ถ่ายรูป / อัปโหลดอาหาร</>
-            )}
-          </Button>
-          
-          {previewImage && (
-            <div className="w-16 h-16 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-700 shrink-0">
-              <img src={previewImage} alt="Food preview" className="w-full h-full object-cover" />
-            </div>
-          )}
-        </div>
+    <div className="bg-white dark:bg-zinc-900 rounded-2xl p-4 sm:p-6 shadow-sm border border-zinc-100 dark:border-zinc-800">
+      
+      <input 
+        type="file" 
+        accept="image/*" 
+        capture="environment" 
+        className="hidden" 
+        ref={fileInputRef}
+        onChange={handleFileChange}
+      />
+
+      <Button 
+        type="button" 
+        className="w-full h-16 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white shadow-lg shadow-teal-500/25 text-base sm:text-lg font-bold transition-transform hover:scale-[1.01] active:scale-[0.98] flex items-center justify-center mb-2"
+        onClick={() => fileInputRef.current?.click()}
+        disabled={isScanning}
+      >
+        {isScanning ? (
+          <><Loader2 className="w-6 h-6 mr-3 animate-spin" /> {t('analyzing')}</>
+        ) : (
+          <><Camera className="w-6 h-6 mr-3" /> {t('aiRecognition')}</>
+        )}
+      </Button>
+
+      <div className="relative flex items-center py-5">
+        <div className="flex-grow border-t border-zinc-100 dark:border-zinc-800"></div>
+        <span className="flex-shrink-0 mx-4 text-zinc-400 dark:text-zinc-500 text-xs font-semibold tracking-wider uppercase">or enter manually</span>
+        <div className="flex-grow border-t border-zinc-100 dark:border-zinc-800"></div>
       </div>
 
-      <form ref={formRef} action={action} className="space-y-4 rounded-xl border border-zinc-100 dark:border-zinc-800 p-6 bg-white dark:bg-zinc-900 shadow-sm">
-        <h3 className="text-lg font-semibold border-b border-zinc-100 dark:border-zinc-800 pb-2">Add New Food</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label htmlFor="name" className="text-sm font-medium">Food Name</label>
-            <input ref={nameRef} type="text" id="name" name="name" className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-transparent p-2 text-sm" required placeholder="e.g. ข้าวมันไก่" />
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="servingSize" className="text-sm font-medium">Serving Size</label>
-            <input ref={servingRef} type="text" id="servingSize" name="servingSize" className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-transparent p-2 text-sm" required placeholder="e.g. 1 จาน" />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="calories" className="text-sm font-medium">Calories (kcal)</label>
-            <input ref={calRef} type="number" id="calories" name="calories" className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-transparent p-2 text-sm" required min="0" step="1" />
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="protein" className="text-sm font-medium">Protein (g)</label>
-            <input ref={proteinRef} type="number" id="protein" name="protein" className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-transparent p-2 text-sm" required min="0" step="0.1" />
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="carbs" className="text-sm font-medium">Carbs (g)</label>
-            <input ref={carbsRef} type="number" id="carbs" name="carbs" className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-transparent p-2 text-sm" required min="0" step="0.1" />
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="fat" className="text-sm font-medium">Fat (g)</label>
-            <input ref={fatRef} type="number" id="fat" name="fat" className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-transparent p-2 text-sm" required min="0" step="0.1" />
-          </div>
-
-          <div className="space-y-2 md:col-span-2">
-            <label htmlFor="fiber" className="text-sm font-medium">Fiber (g)</label>
-            <input ref={fiberRef} type="number" id="fiber" name="fiber" className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-transparent p-2 text-sm" required min="0" step="0.1" defaultValue={0} />
-          </div>
+      <form ref={formRef} onSubmit={handleSubmit} className="space-y-3">
+        <div>
+          <input 
+            type="text" 
+            name="name" 
+            placeholder="Food name (e.g. Chicken Breast)"
+            className="w-full text-sm p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-teal-500" 
+            required 
+          />
         </div>
         
-        <div className="flex justify-end pt-4">
-          <Button type="submit" disabled={isSubmitting || isAnalyzing}>
-            {isSubmitting ? 'Saving...' : 'Save Food'}
-          </Button>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <input 
+              type="text" 
+              name="servingSize" 
+              placeholder="Serving (e.g. 100g)"
+              className="w-full text-sm p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-teal-500" 
+              required 
+            />
+          </div>
+          <div>
+            <input 
+              type="number" 
+              name="calories" 
+              placeholder="Calories (kcal)"
+              className="w-full text-sm p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-teal-500" 
+              required 
+            />
+          </div>
         </div>
+
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <input 
+              type="number" 
+              name="protein"
+              step="0.1" 
+              placeholder="Protein (g)"
+              className="w-full text-sm p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-teal-500" 
+              required 
+            />
+          </div>
+          <div>
+            <input 
+              type="number" 
+              name="carbs"
+              step="0.1" 
+              placeholder="Carbs (g)"
+              className="w-full text-sm p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-teal-500" 
+              required 
+            />
+          </div>
+          <div>
+            <input 
+              type="number" 
+              name="fat"
+              step="0.1" 
+              placeholder="Fat (g)"
+              className="w-full text-sm p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-teal-500" 
+              required 
+            />
+          </div>
+        </div>
+
+        <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white rounded-xl h-[46px] mt-1" disabled={isSubmitting}>
+          <Plus className="w-4 h-4 mr-2" /> {t('add')}
+        </Button>
       </form>
     </div>
   )

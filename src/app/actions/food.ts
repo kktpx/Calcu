@@ -49,3 +49,44 @@ export async function deleteFood(id: string) {
 
   revalidatePath('/dashboard/foods')
 }
+
+import { analyzeFoodWithGemini } from '@/lib/gemini'
+
+export async function analyzeFoodImage(formData: FormData) {
+  const session = await auth()
+  if (!session?.user?.email) throw new Error('Not authenticated')
+
+  const file = formData.get('file') as File
+  if (!file) throw new Error('No file provided')
+
+  const arrayBuffer = await file.arrayBuffer()
+  const buffer = Buffer.from(arrayBuffer)
+  const base64Image = buffer.toString('base64')
+  const mimeType = file.type || 'image/jpeg'
+
+  const prompt = `Analyze this image and identify the food.
+Return ONLY a valid JSON object matching this schema without any markdown formatting like \`\`\`json:
+{
+  "name": "Food Name",
+  "calories": 100,
+  "protein": 10.5,
+  "carbs": 5.2,
+  "fat": 3.1,
+  "fiber": 1.0,
+  "servingSize": "100g"
+}`
+
+  const result = await analyzeFoodWithGemini(prompt, base64Image, mimeType)
+  try {
+    // clean up any potential markdown wrapper
+    let cleanJson = result.trim()
+    if (cleanJson.startsWith('\`\`\`json')) cleanJson = cleanJson.replace(/^\`\`\`json/, '')
+    if (cleanJson.startsWith('\`\`\`')) cleanJson = cleanJson.replace(/^\`\`\`/, '')
+    if (cleanJson.endsWith('\`\`\`')) cleanJson = cleanJson.replace(/\`\`\`$/, '')
+    
+    return JSON.parse(cleanJson.trim())
+  } catch (err) {
+    console.error("Failed to parse AI JSON: ", result)
+    throw new Error('Failed to parse AI result')
+  }
+}

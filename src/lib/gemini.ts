@@ -15,23 +15,21 @@ export const genAI = new GoogleGenerativeAI(apiKey || "");
  * @param prompt The text prompt to ask Gemini
  * @param base64Image (Optional) The base64 encoded image string for vision capabilities
  */
-export async function analyzeFoodWithGemini(prompt: string, base64Image?: string) {
+export async function analyzeFoodWithGemini(prompt: string, base64Image?: string, mimeType: string = "image/jpeg") {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-lite-latest" });
     const parts: unknown[] = [prompt];
 
     if (base64Image) {
-      // Assuming base64 string doesn't include the data:image/jpeg;base64, prefix
-      // If it does, make sure to strip it before passing to this function.
       parts.push({
         inlineData: {
           data: base64Image,
-          mimeType: "image/jpeg", // or detect mime type dynamically
+          mimeType: mimeType,
         },
       });
     }
 
-    const result = await model.generateContent(parts);
+    const result = await model.generateContent(parts as any);
     const response = await result.response;
     return response.text();
   } catch (error: unknown) {

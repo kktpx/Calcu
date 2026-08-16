@@ -39,23 +39,26 @@ export async function analyzeFoodImage(formData: FormData) {
 
   try {
     const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-flash-lite-latest' })
 
     const buffer = await file.arrayBuffer()
     const base64String = Buffer.from(buffer).toString('base64')
 
-    const prompt = `Analyze this image of food and provide an estimate of its nutritional value.
+    const prompt = `You are an expert nutritionist specializing in Thai food and general cuisine.
+Carefully analyze this food image. Identify the specific dish, visible ingredients, and cooking method (e.g., stir-fried with heavy oil, deep-fried, boiled).
+Provide a highly accurate estimate of its nutritional value for the ENTIRE portion shown in the image.
+Account for hidden calories like cooking oils, sauces, and sugar commonly used in street food or restaurants.
+
 Respond ONLY with a valid JSON object using the following structure, with no markdown formatting or backticks:
 {
-  "name": "Food Name (Preferably in Thai or simple English)",
-  "servingSize": "e.g., 1 จาน, 1 ชาม, 100g",
-  "calories": number (integer),
-  "protein": number (float),
-  "carbs": number (float),
-  "fat": number (float),
-  "fiber": number (float)
-}
-Be as accurate as possible.`
+  "name": "Specific Food Name (in Thai, e.g., 'ข้าวกะเพราหมูกรอบไข่ดาว')",
+  "servingSize": "Realistic portion size shown (e.g., 1 จาน, 1 ชาม)",
+  "calories": number (integer, total kcal),
+  "protein": number (float, grams),
+  "carbs": number (float, grams),
+  "fat": number (float, grams),
+  "fiber": number (float, grams)
+}`
 
     const result = await model.generateContent([
       prompt,

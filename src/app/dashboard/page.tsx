@@ -1,47 +1,43 @@
 import { auth } from '@/auth'
-import { logout } from '@/app/actions/auth'
-import { Button } from '@/components/ui/button'
+import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { ProfileForm } from '@/components/profile-form'
 import { MealTracker } from '@/components/meal-tracker'
 import { DashboardCharts } from '@/components/dashboard-charts'
-import Link from 'next/link'
+import { CalorieRing } from '@/components/calorie-ring'
+import { MacroBars } from '@/components/macro-bars'
 
 export default async function DashboardPage() {
   const session = await auth()
   
   if (!session?.user?.email) {
-    return <div>Not authenticated</div>
+    redirect('/login')
   }
 
-  const userWithProfile = await prisma.user.findUnique({
+  const user = await prisma.user.findUnique({
     where: { email: session.user.email },
     include: { profile: true }
   })
 
-  const profile = userWithProfile?.profile
-
-  if (!profile) {
-    return <div>Profile not found. Please contact support.</div>
+  if (!user) {
+    redirect('/login')
   }
 
-  // Get 7 days data
-  const now = new Date()
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const todayEnd = new Date(todayStart)
-  todayEnd.setDate(todayEnd.getDate() + 1)
+  // Today's date logic
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
   
-  const sevenDaysAgo = new Date(todayStart)
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6) // Last 7 days including today
-  
-  const dateStr = todayStart.toISOString().split('T')[0]
+  // Local date string for forms
+  const dateStr = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0]
 
-  const pastMeals = await prisma.meal.findMany({
+  // Fetch meals for today
+  const meals = await prisma.meal.findMany({
     where: {
-      userId: userWithProfile.id,
+      userId: user.id,
       logDate: {
-        gte: sevenDaysAgo,
-        lt: todayEnd
+        gte: today,
+        lt: tomorrow
       }
     },
     include: {
@@ -53,159 +49,120 @@ export default async function DashboardPage() {
     }
   })
 
+  // Fetch all foods for dropdown
   const allFoods = await prisma.food.findMany({
     orderBy: { name: 'asc' }
   })
 
-  // chartData generation
+  // Calculate totals
+  let totalCalories = 0
+  let totalProtein = 0
+  let totalCarbs = 0
+  let totalFat = 0
+
+  meals.forEach((meal: any) => {
+    meal.mealItems.forEach((item: any) => {
+      totalCalories += item.computedCalories
+      totalProtein += item.food.protein * item.servingMultiplier
+      totalCarbs += item.food.carbs * item.servingMultiplier
+      totalFat += item.food.fat * item.servingMultiplier
+    })
+  })
+
+  // BMR & TDEE Calculation
+  let tdee = 2000 // default
+  let proteinTarget = 150
+  let carbsTarget = 250
+  let fatTarget = 65
+
+  if (user.profile) {
+    const { age, gender, heightCm, weightKg, activityLevel, fitnessGoal } = user.profile
+    let bmr = 10 * weightKg + 6.25 * heightCm - 5 * age
+    bmr += gender === 'male' ? 5 : -161
+
+    const activityMultipliers: Record<string, number> = {
+      sedentary: 1.2,
+      light: 1.375,
+      moderate: 1.55,
+      active: 1.725,
+      very_active: 1.9
+    }
+    tdee = Math.round(bmr * (activityMultipliers[activityLevel] || 1.2))
+
+    if (fitnessGoal === 'lose') tdee -= 500
+    if (fitnessGoal === 'gain') tdee += 500
+
+    proteinTarget = Math.round(weightKg * 2.2) // 2.2g per kg
+    fatTarget = Math.round((tdee * 0.25) / 9) // 25% of calories from fat
+    carbsTarget = Math.round((tdee - (proteinTarget * 4 + fatTarget * 9)) / 4)
+  }
+
+  // Generate chart data for the last 7 days
   const chartData = []
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(sevenDaysAgo)
-    d.setDate(d.getDate() + i)
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+    d.setHours(0,0,0,0)
+    const nextD = new Date(d)
+    nextD.setDate(d.getDate() + 1)
     
-    // For weekday abbreviation (e.g. 'Mon')
-    const dayStr = d.toLocaleDateString('en-US', { weekday: 'short' })
-    
-    // filter meals for this date
-    const dayMeals = pastMeals.filter(m => {
-      const mDate = new Date(m.logDate)
-      return mDate.getDate() === d.getDate() && mDate.getMonth() === d.getMonth()
+    const dayMeals = await prisma.meal.findMany({
+      where: {
+        userId: user.id,
+        logDate: { gte: d, lt: nextD }
+      },
+      include: { mealItems: { include: { food: true } } }
     })
 
-    let cal = 0, pro = 0, car = 0, fat = 0
-    dayMeals.forEach(m => {
-      m.mealItems.forEach(item => {
-        cal += item.computedCalories
-        pro += item.food.protein * item.servingMultiplier
-        car += item.food.carbs * item.servingMultiplier
-        fat += item.food.fat * item.servingMultiplier
+    let cals = 0, p = 0, c = 0, f = 0
+    dayMeals.forEach((m: any) => {
+      m.mealItems.forEach((item: any) => {
+        cals += item.computedCalories
+        p += item.food.protein * item.servingMultiplier
+        c += item.food.carbs * item.servingMultiplier
+        f += item.food.fat * item.servingMultiplier
       })
     })
 
     chartData.push({
-      date: dayStr,
-      calories: Math.round(cal),
-      protein: Math.round(pro),
-      carbs: Math.round(car),
-      fat: Math.round(fat)
+      date: d.toLocaleDateString('en-US', { weekday: 'short' }),
+      calories: Math.round(cals),
+      protein: Math.round(p),
+      carbs: Math.round(c),
+      fat: Math.round(f)
     })
   }
 
-  // today's meals are just dayMeals for today
-  const meals = pastMeals.filter(m => {
-    const mDate = new Date(m.logDate)
-    return mDate.getDate() === todayStart.getDate() && mDate.getMonth() === todayStart.getMonth()
-  })
-
-  // consumed targets are basically chartData[6]
-  const todayData = chartData[6]
-  const consumedCalories = todayData.calories
-  const consumedProtein = todayData.protein
-  const consumedCarbs = todayData.carbs
-  const consumedFat = todayData.fat
-
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-4 md:p-8">
-      <div className="mx-auto max-w-5xl space-y-8">
-        
-        {/* Header */}
-        <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-100 dark:border-zinc-800">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-zinc-500 dark:text-zinc-400 mt-1">
-              Welcome back, {session.user.name || session.user.email}
-            </p>
-          </div>
-          <div className="flex items-center gap-4 mt-4 sm:mt-0">
-            <Link href="/dashboard/weight">
-              <Button variant="secondary" className="rounded-full">
-                Weight Tracking
-              </Button>
-            </Link>
-            <Link href="/dashboard/foods">
-              <Button variant="secondary" className="rounded-full">
-                Food Database
-              </Button>
-            </Link>
-            <form action={logout}>
-              <Button variant="outline" type="submit" className="rounded-full">
-                Log out
-              </Button>
-            </form>
-          </div>
-        </header>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          {/* Main Content Area */}
-          <div className="lg:col-span-2 space-y-8">
-            <section className="bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-100 dark:border-zinc-800">
-              <h2 className="text-xl font-bold mb-6">Today&apos;s Nutrition</h2>
-              
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-xl border border-zinc-100 dark:border-zinc-800">
-                  <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Calories</div>
-                  <div className="text-2xl font-black text-teal-600 dark:text-teal-400 mt-1">{Math.round(consumedCalories)} <span className="text-sm font-normal text-zinc-400">/ {profile.dailyCalorieTarget}</span></div>
-                  <div className="text-xs text-zinc-400 mt-1">kcal</div>
-                </div>
-                
-                <div className="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-xl border border-zinc-100 dark:border-zinc-800">
-                  <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Protein</div>
-                  <div className="text-2xl font-black text-rose-500 dark:text-rose-400 mt-1">{Math.round(consumedProtein)} <span className="text-sm font-normal text-zinc-400">/ {profile.targetProtein}</span></div>
-                  <div className="text-xs text-zinc-400 mt-1">grams</div>
-                </div>
-                
-                <div className="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-xl border border-zinc-100 dark:border-zinc-800">
-                  <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Carbs</div>
-                  <div className="text-2xl font-black text-amber-500 dark:text-amber-400 mt-1">{Math.round(consumedCarbs)} <span className="text-sm font-normal text-zinc-400">/ {profile.targetCarbs}</span></div>
-                  <div className="text-xs text-zinc-400 mt-1">grams</div>
-                </div>
-                
-                <div className="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-xl border border-zinc-100 dark:border-zinc-800">
-                  <div className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Fats</div>
-                  <div className="text-2xl font-black text-sky-500 dark:text-sky-400 mt-1">{Math.round(consumedFat)} <span className="text-sm font-normal text-zinc-400">/ {profile.targetFat}</span></div>
-                  <div className="text-xs text-zinc-400 mt-1">grams</div>
-                </div>
-              </div>
-            </section>
-            <DashboardCharts data={chartData} />
-            
-            <section>
-              <h2 className="text-xl font-bold mb-4">Log a Meal</h2>
-              <MealTracker meals={meals} allFoods={allFoods} dateStr={dateStr} />
-            </section>
-          </div>
-
-          {/* Sidebar Area */}
-          <div className="space-y-8">
-            <section className="bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-100 dark:border-zinc-800">
-              <h2 className="text-xl font-bold mb-4">Your Profile</h2>
-              
-              <ul className="space-y-3 mb-6">
-                <li className="flex justify-between items-center text-sm border-b border-zinc-100 dark:border-zinc-800 pb-2">
-                  <span className="text-zinc-500 dark:text-zinc-400">Goal</span>
-                  <span className="font-medium capitalize">{profile.fitnessGoal} Weight</span>
-                </li>
-                <li className="flex justify-between items-center text-sm border-b border-zinc-100 dark:border-zinc-800 pb-2">
-                  <span className="text-zinc-500 dark:text-zinc-400">Activity</span>
-                  <span className="font-medium capitalize">{profile.activityLevel.replace('_', ' ')}</span>
-                </li>
-                <li className="flex justify-between items-center text-sm border-b border-zinc-100 dark:border-zinc-800 pb-2">
-                  <span className="text-zinc-500 dark:text-zinc-400">Height</span>
-                  <span className="font-medium">{profile.heightCm} cm</span>
-                </li>
-                <li className="flex justify-between items-center text-sm">
-                  <span className="text-zinc-500 dark:text-zinc-400">Weight</span>
-                  <span className="font-medium">{profile.weightKg} kg</span>
-                </li>
-              </ul>
-
-              <ProfileForm profile={profile} />
-            </section>
-          </div>
-          
+    <div className="max-w-lg mx-auto p-4 sm:p-6 space-y-6">
+      <header className="flex justify-between items-center bg-white dark:bg-zinc-900 rounded-2xl p-4 shadow-sm border border-zinc-100 dark:border-zinc-800">
+        <div>
+          <h1 className="font-extrabold text-xl tracking-tight text-teal-600 dark:text-teal-400">CalWise</h1>
         </div>
-      </div>
+        <div className="text-sm font-medium text-zinc-500">
+          {new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
+        </div>
+      </header>
+
+      {/* Main Stats Card */}
+      <section className="bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-100 dark:border-zinc-800 flex flex-col items-center justify-center">
+        <CalorieRing consumed={Math.round(totalCalories)} target={tdee} />
+      </section>
+
+      {/* Macros Card */}
+      <section className="bg-white dark:bg-zinc-900 rounded-2xl p-4 shadow-sm border border-zinc-100 dark:border-zinc-800">
+        <MacroBars 
+          protein={{ consumed: totalProtein, target: proteinTarget }}
+          carbs={{ consumed: totalCarbs, target: carbsTarget }}
+          fat={{ consumed: totalFat, target: fatTarget }}
+        />
+      </section>
+
+      {/* Weekly Charts */}
+      <DashboardCharts data={chartData} />
+
+      {/* Meals */}
+      <MealTracker meals={meals} allFoods={allFoods} dateStr={dateStr} />
     </div>
   )
 }

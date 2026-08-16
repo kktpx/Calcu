@@ -126,5 +126,19 @@
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
   }
+}
+
+/* Prevent iOS auto-zoom on input focus */
+@layer base {
+  input, select, textarea {
+    font-size: 16px;
+  }
+}
+
+/* Safe area for Bottom Tab Bar */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
