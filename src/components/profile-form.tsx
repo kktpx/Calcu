@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { updateProfile } from '@/app/actions/profile'
 import { Save } from 'lucide-react'
+import { useLanguage } from '@/components/language-provider'
 
 type Profile = {
   age: number
@@ -15,6 +16,7 @@ type Profile = {
 }
 
 export function ProfileForm({ profile }: { profile: Profile }) {
+  const { t } = useLanguage()
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -36,7 +38,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
     <form onSubmit={handleSubmit} className="space-y-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 mt-4">
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-xs font-medium text-zinc-500 mb-1 block">Age</label>
+          <label className="text-xs font-medium text-zinc-500 mb-1 block">{t('age')}</label>
           <input 
             type="number" 
             name="age" 
@@ -46,21 +48,21 @@ export function ProfileForm({ profile }: { profile: Profile }) {
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-zinc-500 mb-1 block">Gender</label>
+          <label className="text-xs font-medium text-zinc-500 mb-1 block">{t('gender')}</label>
           <select 
             name="gender" 
             defaultValue={profile.gender}
             className="w-full text-sm p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950"
           >
-            <option value="male">Male</option>
-            <option value="female">Female</option>
+            <option value="male">{t('male')}</option>
+            <option value="female">{t('female')}</option>
           </select>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-xs font-medium text-zinc-500 mb-1 block">Height (cm)</label>
+          <label className="text-xs font-medium text-zinc-500 mb-1 block">{t('heightCm')}</label>
           <input 
             type="number" 
             name="heightCm" 
@@ -70,7 +72,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-zinc-500 mb-1 block">Weight (kg)</label>
+          <label className="text-xs font-medium text-zinc-500 mb-1 block">{t('weightKg')}</label>
           <input 
             type="number" 
             name="weightKg" 
@@ -83,35 +85,35 @@ export function ProfileForm({ profile }: { profile: Profile }) {
       </div>
 
       <div>
-        <label className="text-xs font-medium text-zinc-500 mb-1 block">Activity Level</label>
+        <label className="text-xs font-medium text-zinc-500 mb-1 block">{t('activityLevel')}</label>
         <select 
           name="activityLevel" 
           defaultValue={profile.activityLevel}
           className="w-full text-sm p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950"
         >
-          <option value="sedentary">Sedentary (office job)</option>
-          <option value="light">Light Activity (1-3 days/week)</option>
-          <option value="moderate">Moderate Activity (3-5 days/week)</option>
-          <option value="active">Active (6-7 days/week)</option>
-          <option value="very_active">Very Active (physical job)</option>
+          <option value="sedentary">{t('sedentary')}</option>
+          <option value="light">{t('lightActivity')}</option>
+          <option value="moderate">{t('moderateActivity')}</option>
+          <option value="active">{t('activeLevel')}</option>
+          <option value="very_active">{t('veryActive')}</option>
         </select>
       </div>
 
       <div>
-        <label className="text-xs font-medium text-zinc-500 mb-1 block">Goal</label>
+        <label className="text-xs font-medium text-zinc-500 mb-1 block">{t('goalLabel')}</label>
         <select 
           name="fitnessGoal" 
           defaultValue={profile.fitnessGoal}
           className="w-full text-sm p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950"
         >
-          <option value="lose">Lose Weight</option>
-          <option value="maintain">Maintain Weight</option>
-          <option value="gain">Gain Weight / Muscle</option>
+          <option value="lose">{t('loseWeight')}</option>
+          <option value="maintain">{t('maintainWeight')}</option>
+          <option value="gain">{t('gainWeight')}</option>
         </select>
       </div>
 
       <Button type="submit" className="w-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl h-[46px] mt-2" disabled={isSubmitting}>
-        <Save className="w-4 h-4 mr-2" /> Save Changes
+        <Save className="w-4 h-4 mr-2" /> {t('saveChanges')}
       </Button>
     </form>
   )

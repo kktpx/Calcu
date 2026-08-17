@@ -83,7 +83,7 @@ export function MealTracker({ meals, allFoods, dateStr }: { meals: Meal[], allFo
                   onChange={(e) => setSelectedMealType(e.target.value)}
                   className="sr-only"
                 />
-                <span className="capitalize">{type}</span>
+                <span className="capitalize">{t(type as any)}</span>
               </label>
             ))}
           </div>
@@ -95,7 +95,7 @@ export function MealTracker({ meals, allFoods, dateStr }: { meals: Meal[], allFo
               className="w-full p-3 text-sm rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950"
               required
             >
-              <option value="">Select a food...</option>
+              <option value="" disabled>{t('selectFood')}</option>
               {allFoods.map(f => (
                 <option key={f.id} value={f.id}>
                   {f.name} ({f.calories} kcal / {f.servingSize})
@@ -106,13 +106,13 @@ export function MealTracker({ meals, allFoods, dateStr }: { meals: Meal[], allFo
             <div className="flex gap-3">
               <input 
                 type="number" 
-                step="0.1" 
-                min="0.1"
+                step="0.5" 
+                min="0.5"
                 value={servingMultiplier}
                 onChange={(e) => setServingMultiplier(Number(e.target.value))}
                 className="w-24 p-3 text-sm rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950"
               />
-              <Button type="submit" className="flex-1 bg-teal-600 hover:bg-teal-700 text-white rounded-xl h-[46px]" disabled={isSubmitting}>
+              <Button type="submit" className="flex-1 bg-teal-600 hover:bg-teal-700 text-white rounded-xl h-[46px]" disabled={isSubmitting || !selectedFoodId}>
                 <Plus className="w-4 h-4 mr-2" /> {t('add')}
               </Button>
             </div>
@@ -131,7 +131,7 @@ export function MealTracker({ meals, allFoods, dateStr }: { meals: Meal[], allFo
           return (
             <div key={type} className="bg-white dark:bg-zinc-900 rounded-2xl p-4 sm:p-6 shadow-sm border border-zinc-100 dark:border-zinc-800">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold capitalize">{type}</h3>
+                <h3 className="font-bold capitalize">{t(type as any)}</h3>
                 <span className="text-sm font-semibold text-teal-600 dark:text-teal-400">{typeCalories} kcal</span>
               </div>
               <div className="space-y-3 divide-y divide-zinc-100 dark:divide-zinc-800/50">

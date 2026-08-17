@@ -91,7 +91,7 @@ export function FoodForm() {
 
       <div className="relative flex items-center py-5">
         <div className="flex-grow border-t border-zinc-100 dark:border-zinc-800"></div>
-        <span className="flex-shrink-0 mx-4 text-zinc-400 dark:text-zinc-500 text-xs font-semibold tracking-wider uppercase">or enter manually</span>
+        <span className="flex-shrink-0 mx-4 text-zinc-400 dark:text-zinc-500 text-xs font-semibold tracking-wider uppercase">{t('orEnterManually')}</span>
         <div className="flex-grow border-t border-zinc-100 dark:border-zinc-800"></div>
       </div>
 
@@ -100,7 +100,7 @@ export function FoodForm() {
           <input 
             type="text" 
             name="name" 
-            placeholder="Food name (e.g. Chicken Breast)"
+            placeholder={t('foodNamePlaceholder')}
             className="w-full text-sm p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-teal-500" 
             required 
           />
@@ -111,7 +111,7 @@ export function FoodForm() {
             <input 
               type="text" 
               name="servingSize" 
-              placeholder="Serving (e.g. 100g)"
+              placeholder={t('servingPlaceholder')}
               className="w-full text-sm p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-teal-500" 
               required 
             />
@@ -120,7 +120,7 @@ export function FoodForm() {
             <input 
               type="number" 
               name="calories" 
-              placeholder="Calories (kcal)"
+              placeholder={t('caloriesPlaceholder')}
               className="w-full text-sm p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-teal-500" 
               required 
             />
@@ -133,7 +133,7 @@ export function FoodForm() {
               type="number" 
               name="protein"
               step="0.1" 
-              placeholder="Protein (g)"
+              placeholder={t('proteinG')}
               className="w-full text-sm p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-teal-500" 
               required 
             />
@@ -143,7 +143,7 @@ export function FoodForm() {
               type="number" 
               name="carbs"
               step="0.1" 
-              placeholder="Carbs (g)"
+              placeholder={t('carbsG')}
               className="w-full text-sm p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-teal-500" 
               required 
             />
@@ -153,7 +153,7 @@ export function FoodForm() {
               type="number" 
               name="fat"
               step="0.1" 
-              placeholder="Fat (g)"
+              placeholder={t('fatG')}
               className="w-full text-sm p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-teal-500" 
               required 
             />
@@ -161,7 +161,7 @@ export function FoodForm() {
         </div>
 
         <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white rounded-xl h-[46px] mt-1" disabled={isSubmitting}>
-          <Plus className="w-4 h-4 mr-2" /> {t('add')}
+          <Plus className="w-4 h-4 mr-2" /> {t('addCustomFood')}
         </Button>
       </form>
     </div>

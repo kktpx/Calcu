@@ -31,7 +31,7 @@ export function DashboardCharts({ data }: { data: ChartData[] }) {
             onClick={() => setActiveChart('macros')}
             className={`px-3 py-1 text-sm rounded-md transition-colors ${activeChart === 'macros' ? 'bg-white dark:bg-zinc-700 shadow-sm font-medium' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300'}`}
           >
-            Macros
+            {t('macros')}
           </button>
         </div>
       </div>

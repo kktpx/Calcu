@@ -128,7 +128,7 @@ export function QuickScan() {
             disabled={isSaving}
             className="w-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl h-11 font-semibold"
           >
-            <Plus className="w-4 h-4 mr-2" /> {isSaving ? t('loading') : 'Save to Foods'}
+            <Plus className="w-4 h-4 mr-2" /> {isSaving ? t('loading') : t('saveToFoods')}
           </Button>
         </div>
       )}

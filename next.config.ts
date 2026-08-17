@@ -10,6 +10,11 @@ const withPWA = withPWAInit({
 const nextConfig: NextConfig = {
   output: 'standalone',
   turbopack: {},
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '5mb'
+    }
+  },
   async headers() {
     return [
       {

@@ -6,6 +6,7 @@ import { DashboardCharts } from '@/components/dashboard-charts'
 import { CalorieRing } from '@/components/calorie-ring'
 import { MacroBars } from '@/components/macro-bars'
 import { QuickScan } from '@/components/quick-scan'
+import { DateDisplay } from '@/components/date-display'
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -140,9 +141,7 @@ export default async function DashboardPage() {
         <div>
           <h1 className="font-extrabold text-xl tracking-tight text-teal-600 dark:text-teal-400">Calcu</h1>
         </div>
-        <div className="text-sm font-medium text-zinc-500">
-          {new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
-        </div>
+        <DateDisplay />
       </header>
 
       {/* Quick Scan */}
