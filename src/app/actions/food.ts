@@ -3,6 +3,18 @@
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
+import { rateLimit } from '@/lib/rate-limit'
+
+const foodSchema = z.object({
+  name: z.string().min(1),
+  calories: z.number().min(0),
+  protein: z.number().min(0),
+  carbs: z.number().min(0),
+  fat: z.number().min(0),
+  fiber: z.number().min(0),
+  servingSize: z.string().min(1)
+})
 
 export async function createFood(formData: FormData) {
   const session = await auth()
@@ -10,28 +22,18 @@ export async function createFood(formData: FormData) {
     throw new Error('Not authenticated')
   }
 
-  const name = formData.get('name') as string
-  const calories = parseInt(formData.get('calories') as string)
-  const protein = parseFloat(formData.get('protein') as string)
-  const carbs = parseFloat(formData.get('carbs') as string)
-  const fat = parseFloat(formData.get('fat') as string)
-  const fiber = parseFloat(formData.get('fiber') as string)
-  const servingSize = formData.get('servingSize') as string
-
-  if (!name || isNaN(calories) || isNaN(protein) || isNaN(carbs) || isNaN(fat) || isNaN(fiber) || !servingSize) {
-    throw new Error('Missing required fields')
-  }
+  const data = foodSchema.parse({
+    name: formData.get('name'),
+    calories: parseInt(formData.get('calories') as string) || 0,
+    protein: parseFloat(formData.get('protein') as string) || 0,
+    carbs: parseFloat(formData.get('carbs') as string) || 0,
+    fat: parseFloat(formData.get('fat') as string) || 0,
+    fiber: parseFloat(formData.get('fiber') as string) || 0,
+    servingSize: formData.get('servingSize')
+  })
 
   await prisma.food.create({
-    data: {
-      name,
-      calories,
-      protein,
-      carbs,
-      fat,
-      fiber,
-      servingSize
-    }
+    data
   })
 
   revalidatePath('/dashboard/foods')
@@ -55,6 +57,11 @@ import { analyzeFoodWithGemini } from '@/lib/gemini'
 export async function analyzeFoodImage(formData: FormData) {
   const session = await auth()
   if (!session?.user?.email) throw new Error('Not authenticated')
+
+  const rl = rateLimit(`ai-food-${session.user.email}`, 5, 60000)
+  if (!rl.success) {
+    throw new Error('Rate limit exceeded. Try again later.')
+  }
 
   const file = formData.get('file') as File
   if (!file) throw new Error('No file provided')

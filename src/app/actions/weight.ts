@@ -3,6 +3,7 @@
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { weightRecordSchema } from '@/lib/validation'
 
 export async function logWeight(formData: FormData) {
   const session = await auth()
@@ -19,13 +20,8 @@ export async function logWeight(formData: FormData) {
     throw new Error('User profile not found')
   }
 
-  const weightKgStr = formData.get('weightKg') as string
-  const dateStr = formData.get('date') as string
-
-  const weightKg = parseFloat(weightKgStr)
-  if (isNaN(weightKg) || weightKg <= 0) {
-    throw new Error('Invalid weight')
-  }
+  const parsedData = weightRecordSchema.parse(Object.fromEntries(formData))
+  const { weightKg, date: dateStr } = parsedData
 
   let recordDate = new Date()
   if (dateStr) {

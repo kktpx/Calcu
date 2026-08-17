@@ -15,7 +15,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>('th')
 
   useEffect(() => {
-    const saved = localStorage.getItem('calwise-lang') as Locale
+    const saved = localStorage.getItem('calcu-lang') as Locale
     if (saved && (saved === 'th' || saved === 'en')) {
       setLocaleState(saved)
     }
@@ -23,7 +23,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   function setLocale(newLocale: Locale) {
     setLocaleState(newLocale)
-    localStorage.setItem('calwise-lang', newLocale)
+    localStorage.setItem('calcu-lang', newLocale)
   }
 
   function t(key: TranslationKey): string {

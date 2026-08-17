@@ -14,13 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CalWise — Smart Calorie Tracker",
+  title: "Calcu — Smart Calorie Tracker",
   description: "Track calories, monitor macros, and reach your fitness goals with AI-powered food recognition.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "CalWise",
+    title: "Calcu",
   },
 };
 

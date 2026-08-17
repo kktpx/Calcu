@@ -4,16 +4,7 @@ import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
 import { calculateBMR, calculateTDEE, calculateMacroTargets } from '@/lib/nutrition'
-import { z } from 'zod'
-
-const ProfileSchema = z.object({
-  age: z.coerce.number().min(10).max(120),
-  gender: z.enum(['male', 'female', 'other']),
-  heightCm: z.coerce.number().min(50).max(300),
-  weightKg: z.coerce.number().min(20).max(500),
-  activityLevel: z.enum(['sedentary', 'light', 'moderate', 'active', 'very_active']),
-  fitnessGoal: z.enum(['lose', 'maintain', 'gain'])
-})
+import { profileUpdateSchema } from '@/lib/validation'
 
 export async function updateProfile(formData: FormData) {
   const session = await auth()
@@ -29,7 +20,7 @@ export async function updateProfile(formData: FormData) {
     throw new Error('User not found')
   }
 
-  const parsed = ProfileSchema.safeParse(Object.fromEntries(formData))
+  const parsed = profileUpdateSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) {
     throw new Error('Invalid form data')
   }

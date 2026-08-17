@@ -3,6 +3,7 @@
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { mealItemSchema } from '@/lib/validation'
 
 export async function addMealItem(formData: FormData) {
   const session = await auth()
@@ -12,18 +13,17 @@ export async function addMealItem(formData: FormData) {
   const user = await prisma.user.findUnique({ where: { email: session.user.email } })
   if (!user) throw new Error('User not found')
 
-  const foodId = formData.get('foodId') as string
-  const mealType = formData.get('mealType') as string
-  const servingMultiplierStr = formData.get('servingMultiplier') as string
-  const servingMultiplier = parseFloat(servingMultiplierStr)
+  const parsedData = mealItemSchema.parse({
+    foodId: formData.get('foodId'),
+    mealType: formData.get('mealType'),
+    servingMultiplier: parseFloat(formData.get('servingMultiplier') as string) || 0
+  })
+
+  const { foodId, mealType, servingMultiplier } = parsedData
   
   // Date to local midnight
   const now = new Date()
   const logDate = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-
-  if (!foodId || !mealType || isNaN(servingMultiplier)) {
-    throw new Error('Invalid input')
-  }
 
   const food = await prisma.food.findUnique({ where: { id: foodId } })
   if (!food) throw new Error('Food not found')

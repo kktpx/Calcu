@@ -1,6 +1,6 @@
 {
-  "name": "CalWise",
-  "short_name": "CalWise",
+  "name": "Calcu",
+  "short_name": "Calcu",
   "description": "Smart Calorie Tracker",
   "start_url": "/",
   "display": "standalone",

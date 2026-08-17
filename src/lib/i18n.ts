@@ -46,9 +46,10 @@ export const translations = {
     getStarted: 'เริ่มต้นใช้งาน',
     heroTitle: 'บันทึกอย่างฉลาด,',
     heroHighlight: 'เพื่อชีวิตที่ดีกว่า.',
-    heroDesc: 'CalWise คือผู้ช่วยโภชนาการอัจฉริยะของคุณ ติดตามแคลอรี่และสารอาหารด้วยระบบ AI ตรวจจับอาหารจากภาพถ่าย',
+    heroDesc: 'Calcu คือผู้ช่วยโภชนาการอัจฉริยะของคุณ ติดตามแคลอรี่และสารอาหารด้วยระบบ AI ตรวจจับอาหารจากภาพถ่าย',
     logMeal: 'บันทึกมื้ออาหาร',
-    add: 'เพิ่ม'
+    add: 'เพิ่ม',
+    quickScan: 'สแกนด่วน'
   },
   en: {
     home: 'Home',
@@ -95,9 +96,10 @@ export const translations = {
     getStarted: 'Get Started',
     heroTitle: 'Track smarter,',
     heroHighlight: 'live better.',
-    heroDesc: 'CalWise is your intelligent nutrition companion. Track calories, monitor macros, and reach your fitness goals with AI-powered food recognition.',
+    heroDesc: 'Calcu is your intelligent nutrition companion. Track calories, monitor macros, and reach your fitness goals with AI-powered food recognition.',
     logMeal: 'Log Meal',
-    add: 'Add'
+    add: 'Add',
+    quickScan: 'Quick Scan'
   }
 } as const
 

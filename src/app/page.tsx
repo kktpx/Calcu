@@ -16,7 +16,7 @@ export default function Home() {
           <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center">
             <Flame className="w-4 h-4 text-white" />
           </div>
-          <span className="font-bold text-xl tracking-tight">CalWise</span>
+          <span className="font-bold text-xl tracking-tight">Calcu</span>
         </div>
         <div className="flex items-center gap-4">
           <LanguageSelector />
@@ -37,7 +37,7 @@ export default function Home() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
               </span>
-              CalWise AI is live
+              Calcu AI is live
             </div>
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight max-w-4xl leading-[1.15] md:leading-[1.1]">
               {t('heroTitle')} <br className="hidden md:block" />
@@ -132,7 +132,7 @@ export default function Home() {
       </main>
 
       <footer className="py-8 text-center text-sm text-zinc-500 dark:text-zinc-500 border-t border-zinc-100 dark:border-zinc-900">
-        <p>&copy; {new Date().getFullYear()} CalWise. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} Calcu. All rights reserved.</p>
       </footer>
     </div>
   )

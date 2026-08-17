@@ -5,6 +5,7 @@ import { MealTracker } from '@/components/meal-tracker'
 import { DashboardCharts } from '@/components/dashboard-charts'
 import { CalorieRing } from '@/components/calorie-ring'
 import { MacroBars } from '@/components/macro-bars'
+import { QuickScan } from '@/components/quick-scan'
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -137,12 +138,15 @@ export default async function DashboardPage() {
     <div className="max-w-lg mx-auto p-4 sm:p-6 space-y-6">
       <header className="flex justify-between items-center bg-white dark:bg-zinc-900 rounded-2xl p-4 shadow-sm border border-zinc-100 dark:border-zinc-800">
         <div>
-          <h1 className="font-extrabold text-xl tracking-tight text-teal-600 dark:text-teal-400">CalWise</h1>
+          <h1 className="font-extrabold text-xl tracking-tight text-teal-600 dark:text-teal-400">Calcu</h1>
         </div>
         <div className="text-sm font-medium text-zinc-500">
           {new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
         </div>
       </header>
+
+      {/* Quick Scan */}
+      <QuickScan />
 
       {/* Main Stats Card */}
       <section className="bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-100 dark:border-zinc-800 flex flex-col items-center justify-center">

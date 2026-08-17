@@ -4,12 +4,8 @@ import { signIn, signOut } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { AuthError } from 'next-auth'
-import { z } from 'zod'
-
-const RegisterSchema = z.object({
-  email: z.string().email({ message: 'Invalid email address' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
-})
+import { loginSchema, registerSchema } from '@/lib/validation'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function authenticate(
   prevState: string | undefined,
@@ -17,7 +13,18 @@ export async function authenticate(
 ) {
   try {
     const data = Object.fromEntries(formData)
-    await signIn('credentials', { ...data, redirectTo: '/dashboard' })
+    const parsed = loginSchema.safeParse(data)
+    
+    if (!parsed.success) {
+      return 'Invalid email or password format.'
+    }
+
+    const rl = rateLimit(`login-${parsed.data.email}`, 5, 60000)
+    if (!rl.success) {
+      return 'Too many login attempts. Try again later.'
+    }
+
+    await signIn('credentials', { ...parsed.data, redirectTo: '/dashboard' })
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
@@ -35,13 +42,19 @@ export async function register(
   prevState: string | undefined,
   formData: FormData,
 ) {
-  const parsed = RegisterSchema.safeParse(Object.fromEntries(formData))
+  const data = Object.fromEntries(formData)
+  const parsed = registerSchema.safeParse(data)
   
   if (!parsed.success) {
     return 'Invalid form data. Email must be valid and password > 6 characters.'
   }
   
   const { email, password } = parsed.data
+  
+  const rl = rateLimit(`register-${email}`, 3, 3600000) // 3 per hour
+  if (!rl.success) {
+    return 'Too many registration attempts. Try again later.'
+  }
   
   try {
     const existingUser = await prisma.user.findUnique({
