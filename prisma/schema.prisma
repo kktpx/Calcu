@@ -23,6 +23,7 @@ model User {
   meals         Meal[]
   weightRecords WeightRecord[]
   dailySummaries DailySummary[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model UserProfile {
@@ -90,4 +91,13 @@ model DailySummary {
   totalCarbs    Float
   totalFat      Float
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  expires   DateTime
+  userId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
