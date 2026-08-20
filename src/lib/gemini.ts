@@ -17,7 +17,7 @@ export const genAI = new GoogleGenerativeAI(apiKey || "");
  */
 export async function analyzeFoodWithGemini(prompt: string, base64Image?: string, mimeType: string = "image/jpeg") {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-lite-latest" });
     const parts: unknown[] = [prompt];
 
     if (base64Image) {
