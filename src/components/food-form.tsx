@@ -21,8 +21,12 @@ export function FoodForm() {
       formData.append('fiber', '0')
     }
     try {
-      await createFood(formData)
-      e.currentTarget.reset()
+      const res = await createFood(formData)
+      if (res?.error) {
+        alert('Failed to add food: ' + res.error)
+      } else {
+        e.currentTarget.reset()
+      }
     } catch (err) {
       console.error(err)
       alert('Failed to add food')

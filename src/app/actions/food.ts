@@ -17,26 +17,32 @@ const foodSchema = z.object({
 })
 
 export async function createFood(formData: FormData) {
-  const session = await auth()
-  if (!session?.user?.email) {
-    throw new Error('Not authenticated')
+  try {
+    const session = await auth()
+    if (!session?.user?.email) {
+      throw new Error('Not authenticated')
+    }
+
+    const data = foodSchema.parse({
+      name: formData.get('name'),
+      calories: parseInt(formData.get('calories') as string) || 0,
+      protein: parseFloat(formData.get('protein') as string) || 0,
+      carbs: parseFloat(formData.get('carbs') as string) || 0,
+      fat: parseFloat(formData.get('fat') as string) || 0,
+      fiber: parseFloat(formData.get('fiber') as string) || 0,
+      servingSize: formData.get('servingSize')
+    })
+
+    await prisma.food.create({
+      data
+    })
+
+    revalidatePath('/dashboard/foods')
+    return { success: true }
+  } catch (error: any) {
+    console.error('CREATE_FOOD_ERROR:', error)
+    return { error: error.message || 'Failed to create food' }
   }
-
-  const data = foodSchema.parse({
-    name: formData.get('name'),
-    calories: parseInt(formData.get('calories') as string) || 0,
-    protein: parseFloat(formData.get('protein') as string) || 0,
-    carbs: parseFloat(formData.get('carbs') as string) || 0,
-    fat: parseFloat(formData.get('fat') as string) || 0,
-    fiber: parseFloat(formData.get('fiber') as string) || 0,
-    servingSize: formData.get('servingSize')
-  })
-
-  await prisma.food.create({
-    data
-  })
-
-  revalidatePath('/dashboard/foods')
 }
 
 export async function deleteFood(id: string) {

@@ -45,9 +45,13 @@ export function QuickScan() {
       formData.append('fat', String(result.fat))
       formData.append('fiber', String(result.fiber || 0))
       formData.append('servingSize', result.servingSize || '1 serving')
-      await createFood(formData)
-      setResult(null)
-      alert('Food added!')
+      const res = await createFood(formData)
+      if (res?.error) {
+        alert('Failed to save food: ' + res.error)
+      } else {
+        setResult(null)
+        alert('Food added!')
+      }
     } catch (err) {
       console.error(err)
       alert('Failed to save food')
